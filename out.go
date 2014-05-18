@@ -13,10 +13,10 @@ type scanner struct {
 }
 
 func main() {
-	s := newScanner("kptechblog.com")
+	s := newScanner("kyle-potts.com")
 	fmt.Println(s)
-	runtime.GOMAXPROCS(runtime.NumCPU())
-	s.getOpenPortsRoutine(15, 120, 4)
+	runtime.GOMAXPROCS(2)
+	s.getOpenPortsRoutine(15, 90, 4)
 }
 
 func newScanner(host string) *scanner {
@@ -45,9 +45,9 @@ func (s scanner) IsPortOpen(port int) bool {
 	return true
 }
 
-func (s scanner) getPorts(start int, length int,c chan []int) {
+func (s scanner) getPorts(start int, length int) {
 	//ports:= <- c
-    ports:= []int{}
+	ports := []int{}
 	for i := start; i < length; i++ {
 		if s.IsPortOpen(i) {
 			fmt.Printf("Rountine[%d-%d], port[%d] success\n", start, length, i)
@@ -58,46 +58,37 @@ func (s scanner) getPorts(start int, length int,c chan []int) {
 		}
 
 	}
-	c <- ports
+	//c <- ports
 	fmt.Println("Done")
 	return
 
 }
 
 func (s scanner) getOpenPortsRoutine(start int, end int, split int) {
-    //n is the number of ports each routines will handle
-	n :=int( math.Floor(float64((end - start) / (split))))
-    numChannels:=0
-    openPorts:= []int{}
-    k:=0
-    // find how many channels we need to make for each rountines
+	numRountines := math.Floor(float64((end - start) / (split)))
+	n := int(numRountines)
+	var numChannels = 0
 	for j := 0; j < end; j += n {
 		numChannels++
 	}
-    // create and initalize each channel
-    channels := make([]chan []int,numChannels)
 
-    for j:=0; j<numChannels; j++{
-        channels[j] = make(chan []int)
-    }
+	fmt.Printf("numChannels=%d\n", numChannels)
+	//channels := make([]chan []int,numChannels)
 
-    // main loop to start each rountines
+	fmt.Printf("NumRoutines = %d\n", int(numRountines+0.5))
 	for i := start; i < end; i += n {
 		if i+n >= end {
-			go s.getPorts(i, end,channels[k])
+			fmt.Printf("%d %d\n", i, end)
+			go s.getPorts(i, end)
 			break
 		}
-		go s.getPorts(i, i+n,channels[k])
-        k++
+		fmt.Printf("%d %d\n", i, i+n)
+		go s.getPorts(i, i+n)
 	}
+	//ports:=[]int{}
+	//c<-ports
+	//p:=<-c
+	//fmt.Println(p)
+	//close(c)
 
-    // loop through each  channels and get the open ports
-    for k:=0; k<numChannels; k++{
-        p:= <-channels[k]
-        for _, port:=range p{
-            openPorts = append(openPorts,port)
-        }
-        close(channels[k])
-    }
-    fmt.Println(openPorts)
 }
