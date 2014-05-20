@@ -6,10 +6,16 @@ import (
 	"net"
 	"runtime"
 	"time"
+    "github.com/daviddengcn/go-colortext"
 )
 
 type scanner struct {
 	host string
+}
+
+type tcpResponse struct {
+    port int
+    name string
 }
 
 func main() {
@@ -50,7 +56,9 @@ func (s scanner) getPorts(start int, length int,c chan []int) {
     ports:= []int{}
 	for i := start; i < length; i++ {
 		if s.IsPortOpen(i) {
+            ct.ChangeColor(ct.Red,false,ct.None,false)
 			fmt.Printf("Rountine[%d-%d], port[%d] success\n", start, length, i)
+            ct.ResetColor()
 			ports = append(ports, i)
 		} else {
 			fmt.Printf("Rountine[%d-%d], port[%d] failure\n", start, length, i)
@@ -101,3 +109,5 @@ func (s scanner) getOpenPortsRoutine(start int, end int, split int) {
     }
     fmt.Println(openPorts)
 }
+
+
